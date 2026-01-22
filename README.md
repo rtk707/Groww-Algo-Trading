@@ -16,10 +16,11 @@ Algorithmic trading backtesting system with real Groww API integration and web U
 pip3 install -r requirements.txt
 ```
 
-### 2. Configure API Token
-Edit `config.py` and add your Groww API auth token:
+### 2. Configure API Key & Secret
+Edit `config.py` and add your Groww API key and secret (from Groww Developer Portal):
 ```python
-API_AUTH_TOKEN = "your_groww_api_token_here"
+API_KEY = "your_groww_api_key_here"
+API_SECRET = "your_groww_api_secret_here"
 ```
 
 ### 3. Run the Application
@@ -41,7 +42,8 @@ Navigate to `http://localhost:5000` and click "Start Backtest"
 ## Configuration
 
 Edit `config.py`:
-- `API_AUTH_TOKEN` - Your Groww API authentication token
+- `API_KEY` - Your Groww API key
+- `API_SECRET` - Your Groww API secret
 - `DEFAULT_SYMBOL` - Stock symbol to backtest (e.g., "RELIANCE", "TCS", "INFY")
 - `INITIAL_CAPITAL` - Starting capital (₹)
 - `USE_MOCK_DATA` - Set to `False` for real data, `True` for mock data

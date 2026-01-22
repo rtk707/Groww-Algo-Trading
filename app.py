@@ -1,7 +1,13 @@
-from flask import Flask, render_template, jsonify
-from config import INITIAL_CAPITAL, DEFAULT_SYMBOL, USE_MOCK_DATA
+from flask import Flask, render_template, jsonify, request
+from config import (
+    INITIAL_CAPITAL,
+    DEFAULT_SYMBOL,
+    USE_MOCK_DATA,
+    STRATEGIES,
+    DEFAULT_STRATEGY,
+)
 from data_fetcher import fetch_historical_data
-from strategy import calculate_indicators, generate_signals
+import strategy as strategy_module
 from backtest import backtest_strategy
 import json
 import socket
@@ -21,15 +27,27 @@ def find_free_port(start_port=5000, max_attempts=10):
             continue
     raise RuntimeError(f"Could not find a free port in range {start_port}-{start_port + max_attempts}")
 
-def run_backtest(symbol=None):
-    """Run the backtest and return results"""
+def run_backtest(symbol=None, strategy_id=None, margin=None):
+    """Run the backtest and return results. margin: '2x'|'5x'|'10x' -> leverage 2|5|10."""
     if symbol is None:
         symbol = DEFAULT_SYMBOL
+    if strategy_id is None or strategy_id not in STRATEGIES:
+        strategy_id = DEFAULT_STRATEGY
+    cfg = STRATEGIES[strategy_id]
+    calc_fn = getattr(strategy_module, cfg["indicators"])
+    signal_fn = getattr(strategy_module, cfg["signals"])
+
+    leverage_map = {"2x": 2, "5x": 5, "10x": 10}
+    leverage = leverage_map.get((margin or "").strip(), 2)
+
     df = fetch_historical_data(symbol, use_mock=USE_MOCK_DATA)
-    df = calculate_indicators(df)
-    df = generate_signals(df)
-    
-    final_value, pnl, trades = backtest_strategy(df, INITIAL_CAPITAL)
+    df = calc_fn(df)
+    df = signal_fn(df)
+
+    exit_rules = cfg.get("exit_rules")
+    final_value, pnl, trades = backtest_strategy(
+        df, INITIAL_CAPITAL, exit_rules=exit_rules, leverage=leverage, stop_loss_pct=0.10
+    )
     
     # Prepare trade markers for chart
     buy_markers = []
@@ -65,12 +83,22 @@ def run_backtest(symbol=None):
             # Date not found in timestamps, skip
             pass
     
-    # Prepare data for visualization
+    # Prepare data for visualization (strategy-specific indicators)
+    sma_20 = df['SMA_20'].fillna(0).tolist() if 'SMA_20' in df.columns else [0] * len(df)
+    sma_50 = df['SMA_50'].fillna(0).tolist() if 'SMA_50' in df.columns else [0] * len(df)
+    rsi = df['RSI'].fillna(0).tolist() if 'RSI' in df.columns else None
+    vwap = df['VWAP'].fillna(0).tolist() if 'VWAP' in df.columns else None
+    ema_9 = df['EMA_9'].fillna(0).tolist() if 'EMA_9' in df.columns else None
+    ema_20 = df['EMA_20'].fillna(0).tolist() if 'EMA_20' in df.columns else None
     chart_data = {
         'timestamps': timestamps_list,
         'close': df['close'].tolist(),
-        'sma_20': df['SMA_20'].fillna(0).tolist(),
-        'sma_50': df['SMA_50'].fillna(0).tolist(),
+        'sma_20': sma_20,
+        'sma_50': sma_50,
+        'rsi': rsi,
+        'vwap': vwap,
+        'ema_9': ema_9,
+        'ema_20': ema_20,
         'signals': df['signal'].tolist(),
         'buy_markers': buy_markers,
         'sell_markers': sell_markers
@@ -103,7 +131,9 @@ def run_backtest(symbol=None):
         'total_trades': len(trades),
         'trades': formatted_trades,
         'chart_data': chart_data,
-        'symbol': symbol
+        'symbol': symbol,
+        'strategy': strategy_id,
+        'margin': f"{leverage}x",
     }
 
 @app.route('/')
@@ -111,11 +141,21 @@ def index():
     """Main dashboard page"""
     return render_template('index.html')
 
+
+@app.route('/api/strategies')
+def api_strategies():
+    """Return list of strategy names for dropdown"""
+    strategies = [{"id": name, "name": name} for name in STRATEGIES]
+    return jsonify({"strategies": strategies, "default": DEFAULT_STRATEGY})
+
+
 @app.route('/api/backtest')
 def api_backtest():
     """API endpoint to run backtest"""
     try:
-        results = run_backtest()  # Uses DEFAULT_SYMBOL from config
+        strategy_id = request.args.get("strategy")
+        margin = request.args.get("margin")
+        results = run_backtest(strategy_id=strategy_id, margin=margin)
         return jsonify(results)
     except ValueError as e:
         # Configuration or data format errors

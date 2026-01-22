@@ -1,7 +1,32 @@
-# Groww API Configuration
-API_AUTH_TOKEN = "eyJraWQiOiJaTUtjVXciLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjI1NTc0MzczMTgsImlhdCI6MTc2OTAzNzMxOCwibmJmIjoxNzY5MDM3MzE4LCJzdWIiOiJ7XCJ0b2tlblJlZklkXCI6XCI5MzRhNjhhNy0xMDhmLTQxMTItYjZmZC0zYTZlODUxYzdhMDRcIixcInZlbmRvckludGVncmF0aW9uS2V5XCI6XCJlMzFmZjIzYjA4NmI0MDZjODg3NGIyZjZkODQ5NTMxM1wiLFwidXNlckFjY291bnRJZFwiOlwiNzcyZTFjODctMGI0ZC00OTMxLTk2MDktZjRmZTA5YjA1MGY3XCIsXCJkZXZpY2VJZFwiOlwiZDU3ZTBjNGQtOTVmOS01ZjllLWI2ZjgtMDMyMmM4ZjViMGUyXCIsXCJzZXNzaW9uSWRcIjpcIjc2YzEyOTRmLTQxNDctNDcxYS04ZTZlLTdlYzAyM2Y1NjU3NlwiLFwiYWRkaXRpb25hbERhdGFcIjpcIno1NC9NZzltdjE2WXdmb0gvS0EwYktXeFVXSDNEQTBFbDBoYjBETFBtUk5STkczdTlLa2pWZDNoWjU1ZStNZERhWXBOVi9UOUxIRmtQejFFQisybTdRPT1cIixcInJvbGVcIjpcImF1dGgtdG90cFwiLFwic291cmNlSXBBZGRyZXNzXCI6XCIyNDA1OjIwMTo2ODBjOjgxN2Y6NTk2NzplMWI2OjY5OTE6OGIyZCwxMDQuMjMuMjE2LjE4MCwzNS4yNDEuMjMuMTIzXCIsXCJ0d29GYUV4cGlyeVRzXCI6MjU1NzQzNzMxODM3Mn0iLCJpc3MiOiJhcGV4LWF1dGgtcHJvZC1hcHAifQ.c-5RewcSUSqJTiEEeiYNO6b7Safg_xVnn2pYhrxNYhHvSFF9eSh79dNMbxsDynr5eiCKYd2ac1CpR0sUllNJOQ"
+# Groww API Configuration (Key + Secret)
+# Get these from Groww Developer Portal. Use key_type "approval".
+API_KEY = "key"
+API_SECRET = "secret"
 
 # Trading Configuration
 INITIAL_CAPITAL = 100000  # Initial capital (₹)
-DEFAULT_SYMBOL = "RELIANCE"  # Symbol for backtesting
+DEFAULT_SYMBOL = "VEDL"  # Symbol for backtesting
 USE_MOCK_DATA = False  # Use real Groww API data
+
+# Strategies: display name -> functions in strategy.py (indicators, signals)
+STRATEGIES = {
+    "SMA Crossover": {
+        "indicators": "calculate_indicators",
+        "signals": "generate_signals",
+    },
+    "RSI Oversold": {
+        "indicators": "rsi_indicators",
+        "signals": "rsi_signals",
+        "exit_rules": {"take_profit_rs": 10, "hold_max_days": 1},
+    },
+    "VWAP Trend Rider": {
+        "indicators": "vwap_indicators",
+        "signals": "vwap_trend_rider_signals",
+    },
+    "VWAP + EMA Confluence": {
+        "indicators": "vwap_indicators",
+        "signals": "vwap_ema_confluence_signals",
+    },
+}
+DEFAULT_STRATEGY = "SMA Crossover"
+DEFAULT_MARGIN = "2x"  # 2x, 5x, or 10x leverage
