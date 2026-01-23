@@ -3,3 +3,4 @@ matplotlib
 numpy
 flask
 growwapi
+python-dotenv

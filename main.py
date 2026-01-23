@@ -9,7 +9,6 @@ from config import (
 from data_fetcher import fetch_historical_data
 import strategy as strategy_module
 from backtest import backtest_strategy
-from visualization import plot_strategy
 
 
 def main():
@@ -30,12 +29,16 @@ def main():
         df, INITIAL_CAPITAL, exit_rules=exit_rules, leverage=leverage, stop_loss_pct=0.10
     )
 
-    print("Strategy:", strategy_id, "| Margin:", DEFAULT_MARGIN, "| 10% stop-loss")
-    print("Final Portfolio Value:", round(final_value, 2))
-    print("Net P&L:", round(pnl, 2))
-    print("Total Trades:", len(trades))
-
-    plot_strategy(df, symbol)
+    print(f"Strategy: {strategy_id} | Margin: {DEFAULT_MARGIN} | 10% stop-loss")
+    print(f"Final Portfolio Value: ₹{round(final_value, 2):,.2f}")
+    print(f"Net P&L: ₹{round(pnl, 2):,.2f}")
+    print(f"Return: {round((pnl / INITIAL_CAPITAL) * 100, 2)}%")
+    print(f"Total Trades: {len(trades)}")
+    
+    if trades:
+        print("\nTrade History:")
+        for trade in trades:
+            print(f"  {trade[0]}: {trade[1]} @ ₹{trade[2]:,.2f} (Qty: {trade[3] if len(trade) > 3 else 'N/A'})")
 
 
 if __name__ == "__main__":

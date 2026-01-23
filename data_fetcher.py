@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from growwapi import GrowwAPI
-from config import API_KEY, API_SECRET
+from env import API_KEY, API_SECRET
 
 def generate_mock_data(days=365, seed=42):
     """Generate mock stock data for testing"""
