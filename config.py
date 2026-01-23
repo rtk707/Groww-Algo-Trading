@@ -44,4 +44,4 @@ STRATEGIES = {
     },
 }
 DEFAULT_STRATEGY = "SMA Crossover"
-DEFAULT_MARGIN = "2x"  # 2x, 5x, or 10x leverage
+DEFAULT_MARGIN = "1x"  # 1x, 2x, 5x, or 10x leverage

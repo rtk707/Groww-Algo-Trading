@@ -23,8 +23,8 @@ def main():
     df = signal_fn(df)
 
     exit_rules = cfg.get("exit_rules")
-    leverage_map = {"2x": 2, "5x": 5, "10x": 10}
-    leverage = leverage_map.get(DEFAULT_MARGIN.strip(), 2)
+    leverage_map = {"1x": 1, "2x": 2, "5x": 5, "10x": 10}
+    leverage = leverage_map.get(DEFAULT_MARGIN.strip(), 1)
     final_value, pnl, trades = backtest_strategy(
         df, INITIAL_CAPITAL, exit_rules=exit_rules, leverage=leverage, stop_loss_pct=0.10
     )

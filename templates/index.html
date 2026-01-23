@@ -480,7 +480,8 @@
                     <div class="margin-wrap">
                         <label for="margin-select">Margin</label>
                         <select id="margin-select" class="margin-select" aria-label="Select margin">
-                            <option value="2x" selected>2x</option>
+                            <option value="1x" selected>1x</option>
+                            <option value="2x">2x</option>
                             <option value="5x">5x</option>
                             <option value="10x">10x</option>
                         </select>
@@ -630,7 +631,7 @@
             try {
                 const stockSymbol = document.getElementById('stock-select').value || stocksData.default;
                 const strategyId = document.getElementById('strategy-select').value || strategiesData.default;
-                const margin = document.getElementById('margin-select').value || '2x';
+                const margin = document.getElementById('margin-select').value || '1x';
                 let url = '/api/backtest';
                 const params = new URLSearchParams();
                 if (stockSymbol) params.set('symbol', stockSymbol);

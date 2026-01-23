@@ -38,8 +38,8 @@ def run_backtest(symbol=None, strategy_id=None, margin=None):
     calc_fn = getattr(strategy_module, cfg["indicators"])
     signal_fn = getattr(strategy_module, cfg["signals"])
 
-    leverage_map = {"2x": 2, "5x": 5, "10x": 10}
-    leverage = leverage_map.get((margin or "").strip(), 2)
+    leverage_map = {"1x": 1, "2x": 2, "5x": 5, "10x": 10}
+    leverage = leverage_map.get((margin or "").strip(), 1)
 
     df = fetch_historical_data(symbol, use_mock=USE_MOCK_DATA)
     df = calc_fn(df)
