@@ -99,6 +99,27 @@
             margin-top: 2px;
         }
 
+        .stock-name {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--accent-dim), rgba(0, 217, 165, 0.2));
+            border: 1px solid var(--accent);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-top: 16px;
+            box-shadow: 0 2px 12px rgba(0, 217, 165, 0.25);
+            letter-spacing: 0.05em;
+        }
+
+        .stock-name::before {
+            content: "📊";
+            font-size: 1.1rem;
+        }
+
         .header-actions {
             display: flex;
             flex-wrap: wrap;
@@ -438,11 +459,18 @@
                 <div class="logo">
                     <div class="logo-icon">📈</div>
                     <div>
-                        <h1>Groww Algo Trading</h1>
+                        <h1>Algo Trading</h1>
                         <p>Backtest & visualize strategies</p>
+                        <div id="stock-name-display" class="stock-name" style="display: none;"></div>
                     </div>
                 </div>
                 <div class="header-actions">
+                    <div class="strategy-wrap">
+                        <label for="stock-select">Stock</label>
+                        <select id="stock-select" class="strategy-select" aria-label="Select stock">
+                            <option value="">Loading…</option>
+                        </select>
+                    </div>
                     <div class="strategy-wrap">
                         <label for="strategy-select">Strategy</label>
                         <select id="strategy-select" class="strategy-select" aria-label="Select strategy">
@@ -501,7 +529,10 @@
 
             <section class="chart-container">
                 <div class="chart-header">
-                    <h2>Price & indicators</h2>
+                    <div>
+                        <h2>Price & indicators</h2>
+                        <p id="chart-stock-name" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; display: none;"></p>
+                    </div>
                     <div class="chart-zoom">
                         <button type="button" onclick="zoomIn()" class="btn btn-zoom" aria-label="Zoom in">+</button>
                         <button type="button" onclick="zoomOut()" class="btn btn-zoom" aria-label="Zoom out">−</button>
@@ -541,6 +572,29 @@
             strategies: [],
             default: ''
         };
+        let stocksData = {
+            stocks: [],
+            default: ''
+        };
+
+        async function loadStocks() {
+            try {
+                const r = await fetch('/api/stocks');
+                const data = await r.json();
+                stocksData = data;
+                const sel = document.getElementById('stock-select');
+                sel.innerHTML = '';
+                data.stocks.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.symbol;
+                    opt.textContent = `${s.symbol} - ${s.name}`;
+                    if (s.symbol === data.default) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+            } catch (e) {
+                document.getElementById('stock-select').innerHTML = '<option value="">Error loading</option>';
+            }
+        }
 
         async function loadStrategies() {
             try {
@@ -574,10 +628,12 @@
             errorDiv.style.display = 'none';
 
             try {
+                const stockSymbol = document.getElementById('stock-select').value || stocksData.default;
                 const strategyId = document.getElementById('strategy-select').value || strategiesData.default;
                 const margin = document.getElementById('margin-select').value || '2x';
                 let url = '/api/backtest';
                 const params = new URLSearchParams();
+                if (stockSymbol) params.set('symbol', stockSymbol);
                 if (strategyId) params.set('strategy', strategyId);
                 params.set('margin', margin);
                 url += '?' + params.toString();
@@ -593,6 +649,16 @@
                 document.getElementById('pnl-percent').textContent = `${data.pnl_percent > 0 ? '+' : ''}${data.pnl_percent}%`;
                 document.getElementById('total-trades').textContent = data.total_trades;
                 document.getElementById('margin-display').textContent = data.margin || '—';
+
+                // Display and highlight stock name
+                const stockNameDisplay = document.getElementById('stock-name-display');
+                const chartStockName = document.getElementById('chart-stock-name');
+                if (data.symbol) {
+                    stockNameDisplay.textContent = data.symbol;
+                    stockNameDisplay.style.display = 'inline-flex';
+                    chartStockName.textContent = `Stock: ${data.symbol}`;
+                    chartStockName.style.display = 'block';
+                }
 
                 const pnlCard = document.getElementById('pnl-card');
                 const pnlPercentCard = document.getElementById('pnl-percent-card');
@@ -839,7 +905,10 @@
         function startBacktest() {
             loadBacktest();
         }
-        document.addEventListener('DOMContentLoaded', loadStrategies);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStocks();
+            loadStrategies();
+        });
 
         function zoomIn() {
             if (priceChart) priceChart.zoom(1.2);

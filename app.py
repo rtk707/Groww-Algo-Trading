@@ -5,6 +5,7 @@ from config import (
     USE_MOCK_DATA,
     STRATEGIES,
     DEFAULT_STRATEGY,
+    AVAILABLE_STOCKS,
 )
 from data_fetcher import fetch_historical_data
 import strategy as strategy_module
@@ -149,13 +150,20 @@ def api_strategies():
     return jsonify({"strategies": strategies, "default": DEFAULT_STRATEGY})
 
 
+@app.route('/api/stocks')
+def api_stocks():
+    """Return list of available stocks for dropdown"""
+    return jsonify({"stocks": AVAILABLE_STOCKS, "default": DEFAULT_SYMBOL})
+
+
 @app.route('/api/backtest')
 def api_backtest():
     """API endpoint to run backtest"""
     try:
         strategy_id = request.args.get("strategy")
         margin = request.args.get("margin")
-        results = run_backtest(strategy_id=strategy_id, margin=margin)
+        symbol = request.args.get("symbol")
+        results = run_backtest(symbol=symbol, strategy_id=strategy_id, margin=margin)
         return jsonify(results)
     except ValueError as e:
         # Configuration or data format errors
