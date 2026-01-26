@@ -390,7 +390,7 @@
             font-size: 1.1rem;
             font-weight: 700;
             color: var(--text);
-            margin-bottom: 20px;
+            margin: 0;
         }
 
         .trades-table-wrap {
@@ -449,6 +449,342 @@
             background: var(--danger-dim);
             color: var(--danger);
         }
+
+        /* Strategy Builder - TradingView Style */
+        .strategy-builder {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            display: none;
+            box-shadow: var(--shadow);
+            width: 100%;
+            box-sizing: border-box;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .strategy-builder.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .strategy-builder {
+                padding: 20px 16px;
+            }
+        }
+
+        .builder-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .builder-header h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .builder-sections {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            width: 100%;
+        }
+
+        .builder-section {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .builder-section.buy-section {
+            border-left: 3px solid var(--accent);
+        }
+
+        .builder-section.sell-section {
+            border-left: 3px solid var(--danger);
+        }
+
+        .builder-section h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .condition-count {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .conditions-list {
+            min-height: 60px;
+            margin-bottom: 16px;
+            width: 100%;
+        }
+
+        .condition-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            transition: all var(--transition);
+            position: relative;
+        }
+
+        .condition-block:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.02);
+            transform: translateX(2px);
+        }
+
+        @media (min-width: 768px) {
+            .condition-block {
+                flex-wrap: nowrap;
+            }
+        }
+
+        .condition-preview {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-left: auto;
+            margin-right: 8px;
+        }
+
+        .condition-block.buy-block {
+            border-left: 3px solid var(--accent);
+        }
+
+        .condition-block.sell-block {
+            border-left: 3px solid var(--danger);
+        }
+
+        .condition-block select,
+        .condition-block input {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            transition: all var(--transition);
+        }
+
+        .condition-block select {
+            min-width: 120px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .condition-block .indicator-select {
+            min-width: 140px;
+        }
+
+        .condition-block .compare-type-select {
+            min-width: 100px;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .condition-block .operator-select {
+            min-width: 110px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .condition-block input[type="number"] {
+            width: 90px;
+            flex-shrink: 0;
+        }
+
+        .value-container {
+            display: inline-flex;
+            flex-shrink: 0;
+        }
+
+        .value-container select {
+            min-width: 130px;
+        }
+
+        .condition-preview {
+            flex: 1;
+            min-width: 120px;
+            text-align: right;
+            margin-left: auto;
+        }
+
+        .condition-block select:focus,
+        .condition-block input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-dim);
+        }
+
+        .condition-connector {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            padding: 4px 8px;
+            background: var(--bg-elevated);
+            border-radius: 4px;
+            margin: 0 4px;
+        }
+
+        .btn-remove {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            padding: 6px 10px;
+            font-size: 1.1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all var(--transition);
+            margin-left: auto;
+            opacity: 0.6;
+        }
+
+        .btn-remove:hover {
+            background: var(--danger-dim);
+            color: var(--danger);
+            opacity: 1;
+        }
+
+        .btn-add-condition {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition);
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .btn-add-condition:hover {
+            background: rgba(0, 217, 165, 0.25);
+        }
+
+        .logic-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+
+        .logic-badge select {
+            background: transparent;
+            border: none;
+            color: var(--accent);
+            font-weight: 700;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .strategy-summary {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .strategy-summary strong {
+            color: var(--text);
+        }
+
+        @media (max-width: 768px) {
+            .condition-block {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .condition-block select,
+            .condition-block input {
+                width: 100%;
+                min-width: auto;
+            }
+            
+            .condition-preview {
+                text-align: left;
+                margin-left: 0;
+                margin-top: 8px;
+            }
+        }
+
+        /* Collapsible Trades */
+        .trades-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .trades-toggle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            transition: transform var(--transition);
+        }
+
+        .trades-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .trades-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .trades-content.collapsed {
+            max-height: 0;
+        }
+
+        .trades-content.expanded {
+            max-height: 2000px;
+        }
     </style>
 </head>
 
@@ -492,6 +828,49 @@
                 </div>
             </div>
         </header>
+
+        <!-- Custom Strategy Builder (Always visible when custom strategy is selected) -->
+        <div id="strategy-builder" class="strategy-builder">
+            <div class="builder-header">
+                <h2>⚙️ Custom Strategy Builder</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Define your own trading rules</p>
+            </div>
+            <div class="builder-sections">
+                <div class="builder-section buy-section">
+                    <h3>
+                        <span>🛒 Buy Conditions</span>
+                        <span class="condition-count" id="buy-count">0</span>
+                    </h3>
+                    <div id="buy-conditions" class="conditions-list"></div>
+                    <button type="button" class="btn-add-condition" onclick="addCondition('buy')">+ Add Condition</button>
+                    <div class="logic-badge">
+                        <span>Combine with:</span>
+                        <select id="buy-logic" onchange="updateConditionCount()">
+                            <option value="AND">AND</option>
+                            <option value="OR">OR</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="builder-section sell-section">
+                    <h3>
+                        <span>💰 Sell Conditions</span>
+                        <span class="condition-count" id="sell-count">0</span>
+                    </h3>
+                    <div id="sell-conditions" class="conditions-list"></div>
+                    <button type="button" class="btn-add-condition" onclick="addCondition('sell')">+ Add Condition</button>
+                    <div class="logic-badge">
+                        <span>Combine with:</span>
+                        <select id="sell-logic" onchange="updateConditionCount()">
+                            <option value="AND">AND</option>
+                            <option value="OR">OR</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="strategy-summary" id="strategy-summary" style="display: none;">
+                <strong>Strategy Preview:</strong> <span id="strategy-preview-text">Add conditions to see preview</span>
+            </div>
+        </div>
 
         <div id="loading" class="loading" style="display: none;">
             <div class="loading-spinner"></div>
@@ -547,19 +926,24 @@
             </section>
 
             <section class="trades-container">
-                <h2>Trade history</h2>
-                <div class="trades-table-wrap">
-                    <table class="trades-table">
-                        <thead>
-                            <tr>
-                                <th>Action</th>
-                                <th>Date</th>
-                                <th>Price</th>
-                                <th>Qty</th>
-                            </tr>
-                        </thead>
-                        <tbody id="trades-body"></tbody>
-                    </table>
+                <div class="trades-header" onclick="toggleTrades()">
+                    <h2>Trade history</h2>
+                    <span class="trades-toggle collapsed" id="trades-toggle">▶</span>
+                </div>
+                <div class="trades-content collapsed" id="trades-content">
+                    <div class="trades-table-wrap">
+                        <table class="trades-table">
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>Date</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trades-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
         </div>
@@ -597,13 +981,165 @@
             }
         }
 
+        const AVAILABLE_INDICATORS = [
+            // Price
+            {
+                value: 'price',
+                label: 'Price (Close)'
+            },
+            {
+                value: 'open_price',
+                label: 'Open Price'
+            },
+            {
+                value: 'high_price',
+                label: 'High Price'
+            },
+            {
+                value: 'low_price',
+                label: 'Low Price'
+            },
+            {
+                value: 'Price_Change',
+                label: 'Price Change %'
+            },
+            {
+                value: 'Price_Change_5',
+                label: 'Price Change 5d %'
+            },
+            {
+                value: 'Price_Change_10',
+                label: 'Price Change 10d %'
+            },
+            // Moving Averages
+            {
+                value: 'SMA_20',
+                label: 'SMA 20'
+            },
+            {
+                value: 'SMA_50',
+                label: 'SMA 50'
+            },
+            {
+                value: 'SMA_100',
+                label: 'SMA 100'
+            },
+            {
+                value: 'SMA_200',
+                label: 'SMA 200'
+            },
+            {
+                value: 'EMA_9',
+                label: 'EMA 9'
+            },
+            {
+                value: 'EMA_20',
+                label: 'EMA 20'
+            },
+            {
+                value: 'EMA_50',
+                label: 'EMA 50'
+            },
+            {
+                value: 'EMA_100',
+                label: 'EMA 100'
+            },
+            {
+                value: 'EMA_200',
+                label: 'EMA 200'
+            },
+            // Momentum
+            {
+                value: 'RSI',
+                label: 'RSI'
+            },
+            {
+                value: 'Stoch_K',
+                label: 'Stochastic %K'
+            },
+            {
+                value: 'Stoch_D',
+                label: 'Stochastic %D'
+            },
+            // MACD
+            {
+                value: 'MACD',
+                label: 'MACD'
+            },
+            {
+                value: 'MACD_Signal',
+                label: 'MACD Signal'
+            },
+            {
+                value: 'MACD_Histogram',
+                label: 'MACD Histogram'
+            },
+            // Bollinger Bands
+            {
+                value: 'BB_Upper',
+                label: 'Bollinger Upper'
+            },
+            {
+                value: 'BB_Middle',
+                label: 'Bollinger Middle'
+            },
+            {
+                value: 'BB_Lower',
+                label: 'Bollinger Lower'
+            },
+            {
+                value: 'BB_Width',
+                label: 'Bollinger Width'
+            },
+            {
+                value: 'BB_Position',
+                label: 'Bollinger Position'
+            },
+            // Volume
+            {
+                value: 'VWAP',
+                label: 'VWAP'
+            },
+            {
+                value: 'volume',
+                label: 'Volume'
+            },
+            {
+                value: 'Volume_SMA',
+                label: 'Volume SMA 20'
+            },
+            {
+                value: 'Volume_Ratio',
+                label: 'Volume Ratio'
+            },
+            // Volatility
+            {
+                value: 'ATR',
+                label: 'ATR'
+            }
+        ];
+
         async function loadStrategies() {
             try {
-                const r = await fetch('/api/strategies');
-                const data = await r.json();
-                strategiesData = data;
                 const sel = document.getElementById('strategy-select');
+                if (!sel) {
+                    console.error('Strategy select element not found');
+                    return;
+                }
+                
+                const r = await fetch('/api/strategies');
+                if (!r.ok) {
+                    throw new Error(`HTTP error! status: ${r.status}`);
+                }
+                
+                const data = await r.json();
+                if (!data || !data.strategies) {
+                    throw new Error('Invalid response format');
+                }
+                
+                strategiesData = data;
                 sel.innerHTML = '';
+                
                 data.strategies.forEach(s => {
                     const opt = document.createElement('option');
                     opt.value = s.id;
@@ -611,9 +1147,365 @@
                     if (s.id === data.default) opt.selected = true;
                     sel.appendChild(opt);
                 });
+                
+                const customOpt = document.createElement('option');
+                customOpt.value = '__CUSTOM__';
+                customOpt.textContent = 'Custom Strategy';
+                sel.appendChild(customOpt);
+                
+                // Show builder immediately if custom is already selected
+                const builder = document.getElementById('strategy-builder');
+                if (sel.value === '__CUSTOM__' && builder) {
+                    builder.classList.add('active');
+                    if (document.querySelectorAll('#buy-conditions .condition-block').length === 0) {
+                        addCondition('buy');
+                    }
+                    if (document.querySelectorAll('#sell-conditions .condition-block').length === 0) {
+                        addCondition('sell');
+                    }
+                }
+
+                // Add event listener for future changes (remove old one first to avoid duplicates)
+                const newHandler = () => {
+                    const builder = document.getElementById('strategy-builder');
+                    if (sel.value === '__CUSTOM__') {
+                        if (builder) {
+                            builder.classList.add('active');
+                            // Scroll to builder smoothly after a brief delay
+                            setTimeout(() => {
+                                builder.scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'start'
+                                });
+                            }, 150);
+                        }
+                        // Always add default conditions when switching to custom
+                        if (document.querySelectorAll('#buy-conditions .condition-block').length === 0) {
+                            addCondition('buy');
+                        }
+                        if (document.querySelectorAll('#sell-conditions .condition-block').length === 0) {
+                            addCondition('sell');
+                        }
+                    } else {
+                        if (builder) {
+                            builder.classList.remove('active');
+                        }
+                    }
+                };
+                
+                // Remove existing listener if any
+                sel.removeEventListener('change', sel._strategyChangeHandler);
+                sel._strategyChangeHandler = newHandler;
+                sel.addEventListener('change', newHandler);
+                
             } catch (e) {
-                document.getElementById('strategy-select').innerHTML = '<option value="">Error loading</option>';
+                console.error('Error loading strategies:', e);
+                const sel = document.getElementById('strategy-select');
+                if (sel) {
+                    sel.innerHTML = '<option value="">Error loading strategies</option>';
+                }
             }
+        }
+
+        function addCondition(type) {
+            const container = document.getElementById(`${type}-conditions`);
+            const block = document.createElement('div');
+            block.className = `condition-block ${type}-block`;
+            block.innerHTML = `
+                <select class="indicator-select" onchange="updateConditionType(this); updateConditionPreview(this); updateConditionCount()">
+                    ${AVAILABLE_INDICATORS.map(i => `<option value="${i.value}">${i.label}</option>`).join('')}
+                </select>
+                <select class="compare-type-select" onchange="updateConditionType(this); updateConditionPreview(this); updateConditionCount()">
+                    <option value="value">vs Value</option>
+                    <option value="indicator">vs Indicator</option>
+                </select>
+                <select class="operator-select" onchange="updateConditionPreview(this); updateConditionCount()">
+                    <option value="<">&lt;</option>
+                    <option value="<=">&lt;=</option>
+                    <option value=">">&gt;</option>
+                    <option value=">=">&gt;=</option>
+                    <option value="==">==</option>
+                    <option value="!=">!=</option>
+                    <option value="crosses_above">Crosses Above</option>
+                    <option value="crosses_below">Crosses Below</option>
+                    <option value="pct_change_above">% Change &gt;</option>
+                    <option value="pct_change_below">% Change &lt;</option>
+                </select>
+                <div class="value-container">
+                    <input type="number" class="value-input" step="0.01" placeholder="Value" onchange="updateConditionPreview(this); updateConditionCount()" style="display: inline-block;" />
+                    <select class="compare-to-select" onchange="updateConditionPreview(this); updateConditionCount()" style="display: none;">
+                        ${AVAILABLE_INDICATORS.map(i => `<option value="${i.value}">${i.label}</option>`).join('')}
+                    </select>
+                </div>
+                <span class="condition-preview"></span>
+                <button type="button" class="btn-remove" onclick="removeCondition(this)" title="Remove condition">×</button>
+            `;
+            container.appendChild(block);
+            // Set example values for first condition
+            if (container.children.length === 1) {
+                const indicator = block.querySelector('.indicator-select');
+                const operator = block.querySelector('.operator-select');
+                const value = block.querySelector('.value-input');
+                if (type === 'buy') {
+                    indicator.value = 'RSI';
+                    operator.value = '<';
+                    value.value = '30';
+                } else {
+                    indicator.value = 'RSI';
+                    operator.value = '>';
+                    value.value = '70';
+                }
+            }
+            updateConditionPreview(block.querySelector('.indicator-select'));
+            updateConditionCount();
+        }
+
+        function updateConditionType(element) {
+            const block = element.closest('.condition-block');
+            const compareType = block.querySelector('.compare-type-select').value;
+            const valueInput = block.querySelector('.value-input');
+            const compareToSelect = block.querySelector('.compare-to-select');
+            const operatorSelect = block.querySelector('.operator-select');
+
+            if (compareType === 'indicator') {
+                valueInput.style.display = 'none';
+                compareToSelect.style.display = 'inline-block';
+                // Update operators for indicator comparison
+                const currentOp = operatorSelect.value;
+                operatorSelect.innerHTML = `
+                    <option value="<">&lt;</option>
+                    <option value="<=">&lt;=</option>
+                    <option value=">">&gt;</option>
+                    <option value=">=">&gt;=</option>
+                    <option value="==">==</option>
+                    <option value="!=">!=</option>
+                    <option value="crosses_above">Crosses Above</option>
+                    <option value="crosses_below">Crosses Below</option>
+                `;
+                if (['crosses_above', 'crosses_below'].includes(currentOp)) {
+                    operatorSelect.value = currentOp;
+                }
+            } else {
+                valueInput.style.display = 'inline-block';
+                compareToSelect.style.display = 'none';
+                // Update operators for value comparison
+                const currentOp = operatorSelect.value;
+                operatorSelect.innerHTML = `
+                    <option value="<">&lt;</option>
+                    <option value="<=">&lt;=</option>
+                    <option value=">">&gt;</option>
+                    <option value=">=">&gt;=</option>
+                    <option value="==">==</option>
+                    <option value="!=">!=</option>
+                    <option value="crosses_above">Crosses Above</option>
+                    <option value="crosses_below">Crosses Below</option>
+                    <option value="pct_change_above">% Change &gt;</option>
+                    <option value="pct_change_below">% Change &lt;</option>
+                `;
+                if (currentOp) operatorSelect.value = currentOp;
+            }
+            updateConditionPreview(element);
+        }
+
+        function updateConditionPreview(element) {
+            const block = element.closest('.condition-block');
+            if (!block) return;
+            const indicator = block.querySelector('.indicator-select').value;
+            const operator = block.querySelector('.operator-select').value;
+            const compareType = block.querySelector('.compare-type-select').value;
+            const valueInput = block.querySelector('.value-input');
+            const compareToSelect = block.querySelector('.compare-to-select');
+            const preview = block.querySelector('.condition-preview');
+
+            const indicatorLabel = AVAILABLE_INDICATORS.find(i => i.value === indicator)?.label || indicator;
+
+            let previewText = '';
+            if (compareType === 'indicator') {
+                const compareTo = compareToSelect.value;
+                const compareToLabel = AVAILABLE_INDICATORS.find(i => i.value === compareTo)?.label || compareTo;
+                if (compareTo) {
+                    let opSymbol = operator;
+                    if (operator === 'crosses_above') opSymbol = 'crosses above';
+                    else if (operator === 'crosses_below') opSymbol = 'crosses below';
+                    else if (operator === '<') opSymbol = '&lt;';
+                    else if (operator === '>') opSymbol = '&gt;';
+                    else if (operator === '<=') opSymbol = '&le;';
+                    else if (operator === '>=') opSymbol = '&ge;';
+                    previewText = `${indicatorLabel} ${opSymbol} ${compareToLabel}`;
+                }
+            } else {
+                const value = valueInput.value;
+                if (value && !isNaN(value)) {
+                    let opSymbol = operator;
+                    if (operator === 'crosses_above') opSymbol = 'crosses above';
+                    else if (operator === 'crosses_below') opSymbol = 'crosses below';
+                    else if (operator === 'pct_change_above') opSymbol = '% change &gt;';
+                    else if (operator === 'pct_change_below') opSymbol = '% change &lt;';
+                    else if (operator === '<') opSymbol = '&lt;';
+                    else if (operator === '>') opSymbol = '&gt;';
+                    else if (operator === '<=') opSymbol = '&le;';
+                    else if (operator === '>=') opSymbol = '&ge;';
+                    previewText = `${indicatorLabel} ${opSymbol} ${value}`;
+                }
+            }
+            preview.innerHTML = previewText;
+            updateStrategyPreview();
+        }
+
+        function removeCondition(btn) {
+            btn.closest('.condition-block').remove();
+            updateConditionCount();
+        }
+
+        function updateConditionCount() {
+            const buyCount = document.querySelectorAll('#buy-conditions .condition-block').length;
+            const sellCount = document.querySelectorAll('#sell-conditions .condition-block').length;
+            const buyCountEl = document.getElementById('buy-count');
+            const sellCountEl = document.getElementById('sell-count');
+            if (buyCountEl) buyCountEl.textContent = buyCount;
+            if (sellCountEl) sellCountEl.textContent = sellCount;
+            updateStrategyPreview();
+        }
+
+        function updateStrategyPreview() {
+            const summary = document.getElementById('strategy-summary');
+            const previewText = document.getElementById('strategy-preview-text');
+            const buyBlocks = document.querySelectorAll('#buy-conditions .condition-block');
+            const sellBlocks = document.querySelectorAll('#sell-conditions .condition-block');
+            const buyLogic = document.getElementById('buy-logic').value;
+            const sellLogic = document.getElementById('sell-logic').value;
+
+            if (buyBlocks.length === 0 && sellBlocks.length === 0) {
+                summary.style.display = 'none';
+                return;
+            }
+
+            summary.style.display = 'block';
+            let preview = [];
+
+            if (buyBlocks.length > 0) {
+                const buyConditions = Array.from(buyBlocks).map(block => {
+                    const ind = block.querySelector('.indicator-select').value;
+                    const indLabel = AVAILABLE_INDICATORS.find(i => i.value === ind)?.label || ind;
+                    const op = block.querySelector('.operator-select').value;
+                    const compareType = block.querySelector('.compare-type-select').value;
+                    if (compareType === 'indicator') {
+                        const compareTo = block.querySelector('.compare-to-select').value;
+                        const compareToLabel = AVAILABLE_INDICATORS.find(i => i.value === compareTo)?.label || compareTo;
+                        return `${indLabel} ${op} ${compareToLabel}`;
+                    } else {
+                        const val = block.querySelector('.value-input').value;
+                        return `${indLabel} ${op} ${val}`;
+                    }
+                }).join(` ${buyLogic} `);
+                preview.push(`<span style="color: var(--accent);">BUY:</span> ${buyConditions}`);
+            }
+
+            if (sellBlocks.length > 0) {
+                const sellConditions = Array.from(sellBlocks).map(block => {
+                    const ind = block.querySelector('.indicator-select').value;
+                    const indLabel = AVAILABLE_INDICATORS.find(i => i.value === ind)?.label || ind;
+                    const op = block.querySelector('.operator-select').value;
+                    const compareType = block.querySelector('.compare-type-select').value;
+                    if (compareType === 'indicator') {
+                        const compareTo = block.querySelector('.compare-to-select').value;
+                        const compareToLabel = AVAILABLE_INDICATORS.find(i => i.value === compareTo)?.label || compareTo;
+                        return `${indLabel} ${op} ${compareToLabel}`;
+                    } else {
+                        const val = block.querySelector('.value-input').value;
+                        return `${indLabel} ${op} ${val}`;
+                    }
+                }).join(` ${sellLogic} `);
+                preview.push(`<span style="color: var(--danger);">SELL:</span> ${sellConditions}`);
+            }
+
+            previewText.innerHTML = preview.join(' | ');
+        }
+
+        function toggleTrades() {
+            const content = document.getElementById('trades-content');
+            const toggle = document.getElementById('trades-toggle');
+            if (content.classList.contains('collapsed')) {
+                // Expand
+                content.classList.remove('collapsed');
+                content.classList.add('expanded');
+                toggle.classList.remove('collapsed');
+                toggle.textContent = '▼';
+            } else {
+                // Collapse
+                content.classList.remove('expanded');
+                content.classList.add('collapsed');
+                toggle.classList.add('collapsed');
+                toggle.textContent = '▶';
+            }
+        }
+
+        function getCustomStrategy() {
+            const buyConditions = [];
+            const sellConditions = [];
+            document.querySelectorAll('#buy-conditions .condition-block').forEach(block => {
+                const indicator = block.querySelector('.indicator-select').value;
+                const operator = block.querySelector('.operator-select').value;
+                const compareType = block.querySelector('.compare-type-select').value;
+                const condition = {
+                    indicator,
+                    operator
+                };
+
+                if (compareType === 'indicator') {
+                    const compareTo = block.querySelector('.compare-to-select').value;
+                    if (compareTo) {
+                        condition.compare_to = compareTo;
+                        buyConditions.push(condition);
+                    }
+                } else {
+                    const value = block.querySelector('.value-input').value;
+                    if (value && !isNaN(value)) {
+                        condition.value = parseFloat(value);
+                        buyConditions.push(condition);
+                    } else if (operator === 'pct_change_above' || operator === 'pct_change_below') {
+                        // Percentage change operators might not need a value
+                        if (value && !isNaN(value)) {
+                            condition.value = parseFloat(value);
+                        }
+                        buyConditions.push(condition);
+                    }
+                }
+            });
+            document.querySelectorAll('#sell-conditions .condition-block').forEach(block => {
+                const indicator = block.querySelector('.indicator-select').value;
+                const operator = block.querySelector('.operator-select').value;
+                const compareType = block.querySelector('.compare-type-select').value;
+                const condition = {
+                    indicator,
+                    operator
+                };
+
+                if (compareType === 'indicator') {
+                    const compareTo = block.querySelector('.compare-to-select').value;
+                    if (compareTo) {
+                        condition.compare_to = compareTo;
+                        sellConditions.push(condition);
+                    }
+                } else {
+                    const value = block.querySelector('.value-input').value;
+                    if (value && !isNaN(value)) {
+                        condition.value = parseFloat(value);
+                        sellConditions.push(condition);
+                    } else if (operator === 'pct_change_above' || operator === 'pct_change_below') {
+                        if (value && !isNaN(value)) {
+                            condition.value = parseFloat(value);
+                        }
+                        sellConditions.push(condition);
+                    }
+                }
+            });
+            return {
+                buy_conditions: buyConditions,
+                sell_conditions: sellConditions,
+                buy_logic: document.getElementById('buy-logic').value,
+                sell_logic: document.getElementById('sell-logic').value
+            };
         }
 
         async function loadBacktest() {
@@ -635,14 +1527,24 @@
                 let url = '/api/backtest';
                 const params = new URLSearchParams();
                 if (stockSymbol) params.set('symbol', stockSymbol);
-                if (strategyId) params.set('strategy', strategyId);
+                if (strategyId === '__CUSTOM__') {
+                    const custom = getCustomStrategy();
+                    if (custom.buy_conditions.length === 0 && custom.sell_conditions.length === 0) {
+                        throw new Error('Please add at least one buy or sell condition');
+                    }
+                    params.set('custom', 'true');
+                    params.set('buy_conditions', JSON.stringify(custom.buy_conditions));
+                    params.set('sell_conditions', JSON.stringify(custom.sell_conditions));
+                    params.set('buy_logic', custom.buy_logic);
+                    params.set('sell_logic', custom.sell_logic);
+                } else {
+                    if (strategyId) params.set('strategy', strategyId);
+                }
                 params.set('margin', margin);
                 url += '?' + params.toString();
                 const response = await fetch(url);
                 const data = await response.json();
                 if (!response.ok || data.error) throw new Error(data.error || data.message || 'Backtest failed');
-
-                if (data.error) throw new Error(data.error);
 
                 document.getElementById('initial-capital').textContent = `₹${data.initial_capital.toLocaleString()}`;
                 document.getElementById('final-value').textContent = `₹${data.final_value.toLocaleString()}`;
@@ -697,6 +1599,7 @@
                 const hasRsi = data.chart_data.rsi && data.chart_data.rsi.length > 0;
                 const useRsiStrategy = data.strategy === 'RSI Oversold';
                 const useVwapStrategy = data.strategy === 'VWAP Trend Rider' || data.strategy === 'VWAP + EMA Confluence';
+                const useCustomStrategy = data.strategy === 'Custom Strategy';
                 const hasVwap = data.chart_data.vwap && data.chart_data.vwap.length > 0;
 
                 const buyData = new Array(data.chart_data.timestamps.length).fill(null);
@@ -726,7 +1629,77 @@
                     pointRadius: 0,
                     tension: 0.15
                 }];
-                if (useRsiStrategy && hasRsi) {
+
+                if (useCustomStrategy) {
+                    // Custom strategy: show all available indicators
+                    if (hasRsi) {
+                        datasets.push({
+                            label: 'RSI',
+                            data: data.chart_data.rsi,
+                            yAxisID: 'y1',
+                            borderColor: '#a78bfa',
+                            backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.15
+                        });
+                    }
+                    if (hasVwap) {
+                        datasets.push({
+                            label: 'VWAP',
+                            data: data.chart_data.vwap,
+                            borderColor: '#f472b6',
+                            backgroundColor: 'rgba(244, 114, 182, 0.08)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.15
+                        });
+                    }
+                    if (data.chart_data.ema_9 && data.chart_data.ema_9.length > 0) {
+                        datasets.push({
+                            label: 'EMA 9',
+                            data: data.chart_data.ema_9,
+                            borderColor: '#34d399',
+                            backgroundColor: 'rgba(52, 211, 153, 0.08)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.15
+                        });
+                    }
+                    if (data.chart_data.ema_20 && data.chart_data.ema_20.length > 0) {
+                        datasets.push({
+                            label: 'EMA 20',
+                            data: data.chart_data.ema_20,
+                            borderColor: '#fbbf24',
+                            backgroundColor: 'rgba(251, 191, 36, 0.08)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.15
+                        });
+                    }
+                    if (data.chart_data.sma_20 && data.chart_data.sma_20.some(v => v !== 0)) {
+                        datasets.push({
+                            label: 'SMA 20',
+                            data: data.chart_data.sma_20,
+                            borderColor: '#34d399',
+                            backgroundColor: 'rgba(52, 211, 153, 0.08)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.15
+                        });
+                    }
+                    if (data.chart_data.sma_50 && data.chart_data.sma_50.some(v => v !== 0)) {
+                        datasets.push({
+                            label: 'SMA 50',
+                            data: data.chart_data.sma_50,
+                            borderColor: '#fbbf24',
+                            backgroundColor: 'rgba(251, 191, 36, 0.08)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.15
+                        });
+                    }
+                } else if (useRsiStrategy && hasRsi) {
                     datasets.push({
                         label: 'RSI',
                         data: data.chart_data.rsi,
@@ -823,7 +1796,7 @@
                         }
                     }
                 };
-                if (useRsiStrategy && hasRsi) {
+                if ((useRsiStrategy || useCustomStrategy) && hasRsi) {
                     scales.y1 = {
                         position: 'right',
                         min: 0,

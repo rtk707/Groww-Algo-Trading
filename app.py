@@ -10,9 +10,11 @@ from config import (
 from data_fetcher import fetch_historical_data
 import strategy as strategy_module
 from backtest import backtest_strategy
+from custom_strategy import compute_all_indicators, execute_custom_strategy
 from utils import prepare_trade_markers, prepare_chart_data, format_trades_for_display
 import socket
 import traceback
+import json
 
 app = Flask(__name__)
 
@@ -27,25 +29,38 @@ def find_free_port(start_port=5000, max_attempts=10):
             continue
     raise RuntimeError(f"Could not find a free port in range {start_port}-{start_port + max_attempts}")
 
-def run_backtest(symbol=None, strategy_id=None, margin=None):
-    """Run the backtest and return results. margin: '2x'|'5x'|'10x' -> leverage 2|5|10."""
+def run_backtest(symbol=None, strategy_id=None, margin=None, custom_strategy=None):
+    """Run the backtest and return results. margin: '1x'|'2x'|'5x'|'10x' -> leverage 1|2|5|10."""
     if symbol is None:
         symbol = DEFAULT_SYMBOL
-    if strategy_id is None or strategy_id not in STRATEGIES:
-        strategy_id = DEFAULT_STRATEGY
     
-    cfg = STRATEGIES[strategy_id]
-    calc_fn = getattr(strategy_module, cfg["indicators"])
-    signal_fn = getattr(strategy_module, cfg["signals"])
-
     leverage_map = {"1x": 1, "2x": 2, "5x": 5, "10x": 10}
     leverage = leverage_map.get((margin or "").strip(), 1)
 
     df = fetch_historical_data(symbol, use_mock=USE_MOCK_DATA)
-    df = calc_fn(df)
-    df = signal_fn(df)
+    
+    if custom_strategy:
+        # Custom strategy: compute all indicators and execute user conditions
+        df = compute_all_indicators(df)
+        df = execute_custom_strategy(
+            df,
+            buy_conditions=custom_strategy.get("buy_conditions", []),
+            sell_conditions=custom_strategy.get("sell_conditions", []),
+            buy_logic=custom_strategy.get("buy_logic", "AND"),
+            sell_logic=custom_strategy.get("sell_logic", "AND")
+        )
+        exit_rules = None
+    else:
+        # Predefined strategy
+        if strategy_id is None or strategy_id not in STRATEGIES:
+            strategy_id = DEFAULT_STRATEGY
+        cfg = STRATEGIES[strategy_id]
+        calc_fn = getattr(strategy_module, cfg["indicators"])
+        signal_fn = getattr(strategy_module, cfg["signals"])
+        df = calc_fn(df)
+        df = signal_fn(df)
+        exit_rules = cfg.get("exit_rules")
 
-    exit_rules = cfg.get("exit_rules")
     final_value, pnl, trades = backtest_strategy(
         df, INITIAL_CAPITAL, exit_rules=exit_rules, leverage=leverage, stop_loss_pct=0.10
     )
@@ -64,7 +79,7 @@ def run_backtest(symbol=None, strategy_id=None, margin=None):
         'trades': formatted_trades,
         'chart_data': chart_data,
         'symbol': symbol,
-        'strategy': strategy_id,
+        'strategy': 'Custom Strategy' if custom_strategy else strategy_id,
         'margin': f"{leverage}x",
     }
 
@@ -80,6 +95,24 @@ def api_strategies():
     strategies = [{"id": name, "name": name} for name in STRATEGIES]
     return jsonify({"strategies": strategies, "default": DEFAULT_STRATEGY})
 
+@app.route('/api/indicators')
+def api_indicators():
+    """Return list of available indicators for custom strategy builder"""
+    indicators = [
+        {"value": "RSI", "label": "RSI"},
+        {"value": "SMA_20", "label": "SMA 20"},
+        {"value": "SMA_50", "label": "SMA 50"},
+        {"value": "EMA_9", "label": "EMA 9"},
+        {"value": "EMA_20", "label": "EMA 20"},
+        {"value": "EMA_50", "label": "EMA 50"},
+        {"value": "VWAP", "label": "VWAP"},
+        {"value": "price", "label": "Price (Close)"},
+        {"value": "open_price", "label": "Open Price"},
+        {"value": "high_price", "label": "High Price"},
+        {"value": "low_price", "label": "Low Price"},
+    ]
+    return jsonify({"indicators": indicators})
+
 
 @app.route('/api/stocks')
 def api_stocks():
@@ -94,7 +127,26 @@ def api_backtest():
         strategy_id = request.args.get("strategy")
         margin = request.args.get("margin")
         symbol = request.args.get("symbol")
-        results = run_backtest(symbol=symbol, strategy_id=strategy_id, margin=margin)
+        is_custom = request.args.get("custom") == "true"
+        
+        custom_strategy = None
+        if is_custom:
+            try:
+                buy_conditions = json.loads(request.args.get("buy_conditions", "[]"))
+                sell_conditions = json.loads(request.args.get("sell_conditions", "[]"))
+                custom_strategy = {
+                    "buy_conditions": buy_conditions,
+                    "sell_conditions": sell_conditions,
+                    "buy_logic": request.args.get("buy_logic", "AND"),
+                    "sell_logic": request.args.get("sell_logic", "AND")
+                }
+            except (json.JSONDecodeError, TypeError) as e:
+                return jsonify({
+                    'error': 'Invalid custom strategy format',
+                    'message': str(e)
+                }), 400
+        
+        results = run_backtest(symbol=symbol, strategy_id=strategy_id, margin=margin, custom_strategy=custom_strategy)
         return jsonify(results)
     except ValueError as e:
         error_details = traceback.format_exc()
