@@ -21,6 +21,7 @@ AVAILABLE_STOCKS = [
     {"symbol": "BHARTIARTL", "name": "Bharti Airtel"},
     {"symbol": "ITC", "name": "ITC"},
     {"symbol": "KOTAKBANK", "name": "Kotak Mahindra Bank"},
+    {"symbol": "VEDL", "name": "Vedanta Ltd"}
 ]
 
 # Strategies: display name -> functions in strategy.py (indicators, signals)
