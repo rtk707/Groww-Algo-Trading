@@ -8,9 +8,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
     <style>
         :root {
             --bg: #0f1419;
@@ -233,6 +236,37 @@
         .btn-zoom:hover {
             background: var(--border);
             border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .chart-type-toggle {
+            display: flex;
+            gap: 6px;
+            background: var(--bg-elevated);
+            padding: 4px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .btn-chart-type {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            transition: all var(--transition);
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .btn-chart-type:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+        }
+
+        .btn-chart-type.active {
+            background: var(--accent);
+            color: #0a0e14;
+            font-weight: 600;
         }
 
         /* Loading */
@@ -753,13 +787,13 @@
                 flex-direction: column;
                 align-items: stretch;
             }
-            
+
             .condition-block select,
             .condition-block input {
                 width: 100%;
                 min-width: auto;
             }
-            
+
             .condition-preview {
                 text-align: left;
                 margin-left: 0;
@@ -926,10 +960,20 @@
                         <h2>Price & indicators</h2>
                         <p id="chart-stock-name" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; display: none;"></p>
                     </div>
-                    <div class="chart-zoom">
-                        <button type="button" onclick="zoomIn()" class="btn btn-zoom" aria-label="Zoom in">+</button>
-                        <button type="button" onclick="zoomOut()" class="btn btn-zoom" aria-label="Zoom out">−</button>
-                        <button type="button" onclick="resetZoom()" class="btn btn-zoom">Reset</button>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="chart-type-toggle">
+                            <button type="button" id="chart-type-line" class="btn btn-chart-type active" onclick="switchChartType('line')">
+                                <span>📈</span> Line
+                            </button>
+                            <button type="button" id="chart-type-candle" class="btn btn-chart-type" onclick="switchChartType('candle')">
+                                <span>📊</span> Candle
+                            </button>
+                        </div>
+                        <div class="chart-zoom">
+                            <button type="button" onclick="zoomIn()" class="btn btn-zoom" aria-label="Zoom in">+</button>
+                            <button type="button" onclick="zoomOut()" class="btn btn-zoom" aria-label="Zoom out">−</button>
+                            <button type="button" onclick="resetZoom()" class="btn btn-zoom">Reset</button>
+                        </div>
                     </div>
                 </div>
                 <div class="chart-wrapper">
@@ -965,7 +1009,12 @@
     </div>
 
     <script>
+        // Chart.js 3.x automatically registers chart types from plugins
+        console.log('Chart.js version:', Chart.version);
+
         let priceChart = null;
+        let currentChartType = 'line'; // 'line' or 'candle'
+        let currentChartData = null; // Store the last chart data
         let strategiesData = {
             strategies: [],
             default: ''
@@ -1139,20 +1188,20 @@
                     console.error('Strategy select element not found');
                     return;
                 }
-                
+
                 const r = await fetch('/api/strategies');
                 if (!r.ok) {
                     throw new Error(`HTTP error! status: ${r.status}`);
                 }
-                
+
                 const data = await r.json();
                 if (!data || !data.strategies) {
                     throw new Error('Invalid response format');
                 }
-                
+
                 strategiesData = data;
                 sel.innerHTML = '';
-                
+
                 data.strategies.forEach(s => {
                     const opt = document.createElement('option');
                     opt.value = s.id;
@@ -1160,12 +1209,12 @@
                     if (s.id === data.default) opt.selected = true;
                     sel.appendChild(opt);
                 });
-                
+
                 const customOpt = document.createElement('option');
                 customOpt.value = '__CUSTOM__';
                 customOpt.textContent = 'Custom Strategy';
                 sel.appendChild(customOpt);
-                
+
                 // Show builder immediately if custom is already selected
                 const builder = document.getElementById('strategy-builder');
                 if (sel.value === '__CUSTOM__' && builder) {
@@ -1205,12 +1254,12 @@
                         }
                     }
                 };
-                
+
                 // Remove existing listener if any
                 sel.removeEventListener('change', sel._strategyChangeHandler);
                 sel._strategyChangeHandler = newHandler;
                 sel.addEventListener('change', newHandler);
-                
+
             } catch (e) {
                 console.error('Error loading strategies:', e);
                 const sel = document.getElementById('strategy-select');
@@ -1330,12 +1379,12 @@
             const compareToSelect = block.querySelector('.compare-to-select');
             const preview = block.querySelector('.condition-preview');
 
-            const indicatorLabel = AVAILABLE_INDICATORS.find(i => i.value === indicator)?.label || indicator;
+            const indicatorLabel = AVAILABLE_INDICATORS.find(i => i.value === indicator) ? .label || indicator;
 
             let previewText = '';
             if (compareType === 'indicator') {
                 const compareTo = compareToSelect.value;
-                const compareToLabel = AVAILABLE_INDICATORS.find(i => i.value === compareTo)?.label || compareTo;
+                const compareToLabel = AVAILABLE_INDICATORS.find(i => i.value === compareTo) ? .label || compareTo;
                 if (compareTo) {
                     let opSymbol = operator;
                     if (operator === 'crosses_above') opSymbol = 'crosses above';
@@ -1399,12 +1448,12 @@
             if (buyBlocks.length > 0) {
                 const buyConditions = Array.from(buyBlocks).map(block => {
                     const ind = block.querySelector('.indicator-select').value;
-                    const indLabel = AVAILABLE_INDICATORS.find(i => i.value === ind)?.label || ind;
+                    const indLabel = AVAILABLE_INDICATORS.find(i => i.value === ind) ? .label || ind;
                     const op = block.querySelector('.operator-select').value;
                     const compareType = block.querySelector('.compare-type-select').value;
                     if (compareType === 'indicator') {
                         const compareTo = block.querySelector('.compare-to-select').value;
-                        const compareToLabel = AVAILABLE_INDICATORS.find(i => i.value === compareTo)?.label || compareTo;
+                        const compareToLabel = AVAILABLE_INDICATORS.find(i => i.value === compareTo) ? .label || compareTo;
                         return `${indLabel} ${op} ${compareToLabel}`;
                     } else {
                         const val = block.querySelector('.value-input').value;
@@ -1417,12 +1466,12 @@
             if (sellBlocks.length > 0) {
                 const sellConditions = Array.from(sellBlocks).map(block => {
                     const ind = block.querySelector('.indicator-select').value;
-                    const indLabel = AVAILABLE_INDICATORS.find(i => i.value === ind)?.label || ind;
+                    const indLabel = AVAILABLE_INDICATORS.find(i => i.value === ind) ? .label || ind;
                     const op = block.querySelector('.operator-select').value;
                     const compareType = block.querySelector('.compare-type-select').value;
                     if (compareType === 'indicator') {
                         const compareTo = block.querySelector('.compare-to-select').value;
-                        const compareToLabel = AVAILABLE_INDICATORS.find(i => i.value === compareTo)?.label || compareTo;
+                        const compareToLabel = AVAILABLE_INDICATORS.find(i => i.value === compareTo) ? .label || compareTo;
                         return `${indLabel} ${op} ${compareToLabel}`;
                     } else {
                         const val = block.querySelector('.value-input').value;
@@ -1521,6 +1570,480 @@
             };
         }
 
+        function renderChart(data) {
+            // Store data for chart type switching
+            currentChartData = data;
+
+            const canvas = document.getElementById('priceChart');
+            const existingChart = Chart.getChart(canvas);
+            if (existingChart) existingChart.destroy();
+            if (priceChart) {
+                try {
+                    priceChart.destroy();
+                } catch (e) {}
+            }
+
+            const ctx = canvas.getContext('2d');
+
+            if (currentChartType === 'candle') {
+                renderCandlestickChart(ctx, data);
+            } else {
+                renderLineChart(ctx, data);
+            }
+        }
+
+        function renderCandlestickChart(ctx, data) {
+            console.log('Rendering candlestick chart...');
+            console.log('Sample OHLC:', {
+                o: data.chart_data.open[0],
+                h: data.chart_data.high[0],
+                l: data.chart_data.low[0],
+                c: data.chart_data.close[0]
+            });
+
+            const candleData = data.chart_data.timestamps.map((time, i) => ({
+                x: time,
+                o: data.chart_data.open[i],
+                h: data.chart_data.high[i],
+                l: data.chart_data.low[i],
+                c: data.chart_data.close[i]
+            }));
+
+            console.log('Candlestick data points:', candleData.length);
+            console.log('Sample candle:', candleData[0]);
+
+            const datasets = [{
+                label: 'Price',
+                data: candleData,
+                type: 'candlestick',
+                color: {
+                    up: '#00d9a5',
+                    down: '#f4212e',
+                    unchanged: '#999999',
+                },
+                borderColor: {
+                    up: '#00d9a5',
+                    down: '#f4212e',
+                    unchanged: '#999999',
+                }
+            }];
+
+            // Add buy/sell markers
+            const buyData = new Array(data.chart_data.timestamps.length).fill(null);
+            const sellData = new Array(data.chart_data.timestamps.length).fill(null);
+            if (data.chart_data.buy_markers) {
+                data.chart_data.buy_markers.forEach(m => {
+                    const idx = data.chart_data.timestamps.indexOf(m.x);
+                    if (idx !== -1) buyData[idx] = m.y;
+                });
+            }
+            if (data.chart_data.sell_markers) {
+                data.chart_data.sell_markers.forEach(m => {
+                    const idx = data.chart_data.timestamps.indexOf(m.x);
+                    if (idx !== -1) sellData[idx] = m.y;
+                });
+            }
+
+            // Add buy/sell markers as line datasets
+            datasets.push({
+                label: 'BUY',
+                data: buyData,
+                type: 'line',
+                borderColor: '#00d9a5',
+                backgroundColor: '#00d9a5',
+                pointRadius: 8,
+                pointHoverRadius: 10,
+                pointStyle: 'triangle',
+                showLine: false
+            }, {
+                label: 'SELL',
+                data: sellData,
+                type: 'line',
+                borderColor: '#f87171',
+                backgroundColor: '#f87171',
+                pointRadius: 8,
+                pointHoverRadius: 10,
+                pointStyle: 'circle',
+                showLine: false
+            });
+
+            console.log('Datasets:', datasets.length);
+
+            priceChart = new Chart(ctx, {
+                type: 'candlestick',
+                data: {
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    parsing: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#8b98a5',
+                                usePointStyle: true,
+                                filter: function(item) {
+                                    return item.text !== 'Price' || item.datasetIndex === 0;
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#1c252f',
+                            titleColor: '#e7e9ea',
+                            bodyColor: '#8b98a5',
+                            borderColor: 'rgba(255,255,255,0.08)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    if (context.dataset.type === 'candlestick' && context.raw) {
+                                        return [
+                                            `O: ₹${context.raw.o?.toFixed(2)}`,
+                                            `H: ₹${context.raw.h?.toFixed(2)}`,
+                                            `L: ₹${context.raw.l?.toFixed(2)}`,
+                                            `C: ₹${context.raw.c?.toFixed(2)}`
+                                        ];
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        return `${label}: ₹${context.parsed.y.toFixed(2)}`;
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: false
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x'
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'category',
+                            grid: {
+                                color: 'rgba(255,255,255,0.06)',
+                                drawOnChartArea: true
+                            },
+                            ticks: {
+                                color: '#8b98a5',
+                                maxRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 20
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            grid: {
+                                color: 'rgba(255,255,255,0.06)'
+                            },
+                            ticks: {
+                                color: '#8b98a5',
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString();
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Price (₹)',
+                                color: '#8b98a5'
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('Candlestick chart created');
+        }
+
+        function renderLineChart(ctx, data) {
+            const hasRsi = data.chart_data.rsi && data.chart_data.rsi.length > 0;
+            const useRsiStrategy = data.strategy === 'RSI Oversold';
+            const useVwapStrategy = data.strategy === 'VWAP Trend Rider' || data.strategy === 'VWAP + EMA Confluence';
+            const useCustomStrategy = data.strategy === 'Custom Strategy';
+            const hasVwap = data.chart_data.vwap && data.chart_data.vwap.length > 0;
+
+            const buyData = new Array(data.chart_data.timestamps.length).fill(null);
+            const sellData = new Array(data.chart_data.timestamps.length).fill(null);
+            if (data.chart_data.buy_markers) {
+                data.chart_data.buy_markers.forEach(m => {
+                    const idx = data.chart_data.timestamps.indexOf(m.x);
+                    if (idx !== -1) buyData[idx] = m.y;
+                });
+            }
+            if (data.chart_data.sell_markers) {
+                data.chart_data.sell_markers.forEach(m => {
+                    const idx = data.chart_data.timestamps.indexOf(m.x);
+                    if (idx !== -1) sellData[idx] = m.y;
+                });
+            }
+
+            const grid = {
+                color: 'rgba(255,255,255,0.06)'
+            };
+            const datasets = [{
+                label: 'Price',
+                data: data.chart_data.close,
+                borderColor: '#1d9bf0',
+                backgroundColor: 'rgba(29, 155, 240, 0.08)',
+                borderWidth: 2,
+                fill: true,
+                pointRadius: 0,
+                tension: 0.15
+            }];
+
+            // Add indicators based on strategy
+            if (useCustomStrategy) {
+                if (hasRsi) {
+                    datasets.push({
+                        label: 'RSI',
+                        data: data.chart_data.rsi,
+                        yAxisID: 'y1',
+                        borderColor: '#a78bfa',
+                        backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.15
+                    });
+                }
+                if (hasVwap) {
+                    datasets.push({
+                        label: 'VWAP',
+                        data: data.chart_data.vwap,
+                        borderColor: '#f472b6',
+                        backgroundColor: 'rgba(244, 114, 182, 0.08)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.15
+                    });
+                }
+                if (data.chart_data.ema_9 && data.chart_data.ema_9.length > 0) {
+                    datasets.push({
+                        label: 'EMA 9',
+                        data: data.chart_data.ema_9,
+                        borderColor: '#34d399',
+                        backgroundColor: 'rgba(52, 211, 153, 0.08)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.15
+                    });
+                }
+                if (data.chart_data.ema_20 && data.chart_data.ema_20.length > 0) {
+                    datasets.push({
+                        label: 'EMA 20',
+                        data: data.chart_data.ema_20,
+                        borderColor: '#fbbf24',
+                        backgroundColor: 'rgba(251, 191, 36, 0.08)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.15
+                    });
+                }
+                if (data.chart_data.sma_20 && data.chart_data.sma_20.some(v => v !== 0)) {
+                    datasets.push({
+                        label: 'SMA 20',
+                        data: data.chart_data.sma_20,
+                        borderColor: '#34d399',
+                        backgroundColor: 'rgba(52, 211, 153, 0.08)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.15
+                    });
+                }
+                if (data.chart_data.sma_50 && data.chart_data.sma_50.some(v => v !== 0)) {
+                    datasets.push({
+                        label: 'SMA 50',
+                        data: data.chart_data.sma_50,
+                        borderColor: '#fbbf24',
+                        backgroundColor: 'rgba(251, 191, 36, 0.08)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.15
+                    });
+                }
+            } else if (useRsiStrategy && hasRsi) {
+                datasets.push({
+                    label: 'RSI',
+                    data: data.chart_data.rsi,
+                    yAxisID: 'y1',
+                    borderColor: '#a78bfa',
+                    backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.15
+                });
+            } else if (useVwapStrategy && hasVwap) {
+                datasets.push({
+                    label: 'VWAP',
+                    data: data.chart_data.vwap,
+                    borderColor: '#f472b6',
+                    backgroundColor: 'rgba(244, 114, 182, 0.08)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.15
+                }, {
+                    label: 'EMA 9',
+                    data: data.chart_data.ema_9,
+                    borderColor: '#34d399',
+                    backgroundColor: 'rgba(52, 211, 153, 0.08)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.15
+                }, {
+                    label: 'EMA 20',
+                    data: data.chart_data.ema_20,
+                    borderColor: '#fbbf24',
+                    backgroundColor: 'rgba(251, 191, 36, 0.08)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.15
+                });
+            } else {
+                datasets.push({
+                    label: 'SMA 20',
+                    data: data.chart_data.sma_20,
+                    borderColor: '#34d399',
+                    backgroundColor: 'rgba(52, 211, 153, 0.08)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.15
+                }, {
+                    label: 'SMA 50',
+                    data: data.chart_data.sma_50,
+                    borderColor: '#fbbf24',
+                    backgroundColor: 'rgba(251, 191, 36, 0.08)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.15
+                });
+            }
+
+            datasets.push({
+                label: 'BUY',
+                data: buyData,
+                borderColor: '#00d9a5',
+                backgroundColor: '#00d9a5',
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointStyle: 'circle',
+                showLine: false
+            }, {
+                label: 'SELL',
+                data: sellData,
+                borderColor: '#f87171',
+                backgroundColor: '#f87171',
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointStyle: 'circle',
+                showLine: false
+            });
+
+            const scales = {
+                x: {
+                    type: 'category',
+                    grid,
+                    ticks: {
+                        color: '#8b98a5',
+                        maxRotation: 45
+                    }
+                },
+                y: {
+                    grid,
+                    ticks: {
+                        color: '#8b98a5'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Price (₹)',
+                        color: '#8b98a5'
+                    }
+                }
+            };
+
+            if ((useRsiStrategy || useCustomStrategy) && hasRsi) {
+                scales.y1 = {
+                    position: 'right',
+                    min: 0,
+                    max: 100,
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        color: '#8b98a5'
+                    },
+                    title: {
+                        display: true,
+                        text: 'RSI',
+                        color: '#8b98a5'
+                    }
+                };
+            }
+
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.chart_data.timestamps,
+                    datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#8b98a5',
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#1c252f',
+                            titleColor: '#e7e9ea',
+                            bodyColor: '#8b98a5',
+                            borderColor: 'rgba(255,255,255,0.08)',
+                            borderWidth: 1
+                        },
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: false
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x'
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x'
+                            }
+                        }
+                    },
+                    scales
+                }
+            });
+        }
+
         async function loadBacktest() {
             const startBtn = document.getElementById('start-btn');
             const loadingDiv = document.getElementById('loading');
@@ -1601,279 +2124,8 @@
                     tradesBody.appendChild(row);
                 });
 
-                const canvas = document.getElementById('priceChart');
-                const existingChart = Chart.getChart(canvas);
-                if (existingChart) existingChart.destroy();
-                if (priceChart) try {
-                    priceChart.destroy();
-                } catch (e) {}
-
-                const ctx = canvas.getContext('2d');
-                const hasRsi = data.chart_data.rsi && data.chart_data.rsi.length > 0;
-                const useRsiStrategy = data.strategy === 'RSI Oversold';
-                const useVwapStrategy = data.strategy === 'VWAP Trend Rider' || data.strategy === 'VWAP + EMA Confluence';
-                const useCustomStrategy = data.strategy === 'Custom Strategy';
-                const hasVwap = data.chart_data.vwap && data.chart_data.vwap.length > 0;
-
-                const buyData = new Array(data.chart_data.timestamps.length).fill(null);
-                const sellData = new Array(data.chart_data.timestamps.length).fill(null);
-                if (data.chart_data.buy_markers) {
-                    data.chart_data.buy_markers.forEach(m => {
-                        const idx = data.chart_data.timestamps.indexOf(m.x);
-                        if (idx !== -1) buyData[idx] = m.y;
-                    });
-                }
-                if (data.chart_data.sell_markers) {
-                    data.chart_data.sell_markers.forEach(m => {
-                        const idx = data.chart_data.timestamps.indexOf(m.x);
-                        if (idx !== -1) sellData[idx] = m.y;
-                    });
-                }
-
-                const grid = {
-                    color: 'rgba(255,255,255,0.06)'
-                };
-                const datasets = [{
-                    label: 'Close',
-                    data: data.chart_data.close,
-                    borderColor: '#00d9a5',
-                    backgroundColor: 'rgba(0, 217, 165, 0.08)',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    tension: 0.15
-                }];
-
-                if (useCustomStrategy) {
-                    // Custom strategy: show all available indicators
-                    if (hasRsi) {
-                        datasets.push({
-                            label: 'RSI',
-                            data: data.chart_data.rsi,
-                            yAxisID: 'y1',
-                            borderColor: '#a78bfa',
-                            backgroundColor: 'rgba(167, 139, 250, 0.1)',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0.15
-                        });
-                    }
-                    if (hasVwap) {
-                        datasets.push({
-                            label: 'VWAP',
-                            data: data.chart_data.vwap,
-                            borderColor: '#f472b6',
-                            backgroundColor: 'rgba(244, 114, 182, 0.08)',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0.15
-                        });
-                    }
-                    if (data.chart_data.ema_9 && data.chart_data.ema_9.length > 0) {
-                        datasets.push({
-                            label: 'EMA 9',
-                            data: data.chart_data.ema_9,
-                            borderColor: '#34d399',
-                            backgroundColor: 'rgba(52, 211, 153, 0.08)',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0.15
-                        });
-                    }
-                    if (data.chart_data.ema_20 && data.chart_data.ema_20.length > 0) {
-                        datasets.push({
-                            label: 'EMA 20',
-                            data: data.chart_data.ema_20,
-                            borderColor: '#fbbf24',
-                            backgroundColor: 'rgba(251, 191, 36, 0.08)',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0.15
-                        });
-                    }
-                    if (data.chart_data.sma_20 && data.chart_data.sma_20.some(v => v !== 0)) {
-                        datasets.push({
-                            label: 'SMA 20',
-                            data: data.chart_data.sma_20,
-                            borderColor: '#34d399',
-                            backgroundColor: 'rgba(52, 211, 153, 0.08)',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0.15
-                        });
-                    }
-                    if (data.chart_data.sma_50 && data.chart_data.sma_50.some(v => v !== 0)) {
-                        datasets.push({
-                            label: 'SMA 50',
-                            data: data.chart_data.sma_50,
-                            borderColor: '#fbbf24',
-                            backgroundColor: 'rgba(251, 191, 36, 0.08)',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0.15
-                        });
-                    }
-                } else if (useRsiStrategy && hasRsi) {
-                    datasets.push({
-                        label: 'RSI',
-                        data: data.chart_data.rsi,
-                        yAxisID: 'y1',
-                        borderColor: '#a78bfa',
-                        backgroundColor: 'rgba(167, 139, 250, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.15
-                    });
-                } else if (useVwapStrategy && hasVwap) {
-                    datasets.push({
-                        label: 'VWAP',
-                        data: data.chart_data.vwap,
-                        borderColor: '#f472b6',
-                        backgroundColor: 'rgba(244, 114, 182, 0.08)',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.15
-                    }, {
-                        label: 'EMA 9',
-                        data: data.chart_data.ema_9,
-                        borderColor: '#34d399',
-                        backgroundColor: 'rgba(52, 211, 153, 0.08)',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.15
-                    }, {
-                        label: 'EMA 20',
-                        data: data.chart_data.ema_20,
-                        borderColor: '#fbbf24',
-                        backgroundColor: 'rgba(251, 191, 36, 0.08)',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.15
-                    });
-                } else {
-                    datasets.push({
-                        label: 'SMA 20',
-                        data: data.chart_data.sma_20,
-                        borderColor: '#34d399',
-                        backgroundColor: 'rgba(52, 211, 153, 0.08)',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.15
-                    }, {
-                        label: 'SMA 50',
-                        data: data.chart_data.sma_50,
-                        borderColor: '#fbbf24',
-                        backgroundColor: 'rgba(251, 191, 36, 0.08)',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.15
-                    });
-                }
-                datasets.push({
-                    label: 'BUY',
-                    data: buyData,
-                    borderColor: '#34d399',
-                    backgroundColor: '#34d399',
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
-                    pointStyle: 'circle',
-                    showLine: false
-                }, {
-                    label: 'SELL',
-                    data: sellData,
-                    borderColor: '#f87171',
-                    backgroundColor: '#f87171',
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
-                    pointStyle: 'circle',
-                    showLine: false
-                });
-
-                const scales = {
-                    x: {
-                        type: 'category',
-                        grid,
-                        ticks: {
-                            color: '#8b98a5',
-                            maxRotation: 45
-                        }
-                    },
-                    y: {
-                        grid,
-                        ticks: {
-                            color: '#8b98a5'
-                        },
-                        title: {
-                            display: true,
-                            text: 'Price (₹)',
-                            color: '#8b98a5'
-                        }
-                    }
-                };
-                if ((useRsiStrategy || useCustomStrategy) && hasRsi) {
-                    scales.y1 = {
-                        position: 'right',
-                        min: 0,
-                        max: 100,
-                        grid: {
-                            drawOnChartArea: false
-                        },
-                        ticks: {
-                            color: '#8b98a5'
-                        },
-                        title: {
-                            display: true,
-                            text: 'RSI',
-                            color: '#8b98a5'
-                        }
-                    };
-                }
-
-                priceChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: data.chart_data.timestamps,
-                        datasets
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top',
-                                labels: {
-                                    color: '#8b98a5',
-                                    usePointStyle: true
-                                }
-                            },
-                            tooltip: {
-                                mode: 'index',
-                                intersect: false,
-                                backgroundColor: '#1c252f',
-                                titleColor: '#e7e9ea',
-                                bodyColor: '#8b98a5',
-                                borderColor: 'rgba(255,255,255,0.08)',
-                                borderWidth: 1
-                            },
-                            zoom: {
-                                zoom: {
-                                    wheel: {
-                                        enabled: false
-                                    },
-                                    pinch: {
-                                        enabled: true
-                                    },
-                                    mode: 'x'
-                                },
-                                pan: {
-                                    enabled: true,
-                                    mode: 'x'
-                                }
-                            }
-                        },
-                        scales
-                    }
-                });
+                // Render chart
+                renderChart(data);
 
                 loadingDiv.style.display = 'none';
                 contentDiv.style.display = 'block';
@@ -1889,9 +2141,23 @@
             }
         }
 
+        function switchChartType(type) {
+            currentChartType = type;
+
+            // Update button states
+            document.getElementById('chart-type-line').classList.toggle('active', type === 'line');
+            document.getElementById('chart-type-candle').classList.toggle('active', type === 'candle');
+
+            // Render chart with stored data if available
+            if (currentChartData) {
+                renderChart(currentChartData);
+            }
+        }
+
         function startBacktest() {
             loadBacktest();
         }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadStocks();
             loadStrategies();

@@ -44,6 +44,9 @@ def prepare_chart_data(df, buy_markers, sell_markers):
     """Prepare chart data with strategy-specific indicators"""
     return {
         'timestamps': df['timestamp'].dt.strftime('%Y-%m-%d').tolist(),
+        'open': df['open'].tolist(),
+        'high': df['high'].tolist(),
+        'low': df['low'].tolist(),
         'close': df['close'].tolist(),
         'sma_20': _get_indicator_list(df, 'SMA_20') or [0] * len(df),
         'sma_50': _get_indicator_list(df, 'SMA_50') or [0] * len(df),
