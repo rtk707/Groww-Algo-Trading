@@ -82,9 +82,19 @@ def compute_all_indicators(df):
     df["open_price"] = df["open"]
     df["high_price"] = df["high"]
     df["low_price"] = df["low"]
-    df["volume"] = df["volume"]
     
     return df
+
+
+# Operator mapping for basic comparisons
+_BASIC_OPERATORS = {
+    "<": lambda a, b: a < b,
+    "<=": lambda a, b: a <= b,
+    ">": lambda a, b: a > b,
+    ">=": lambda a, b: a >= b,
+    "==": lambda a, b: a == b,
+    "!=": lambda a, b: a != b,
+}
 
 
 def evaluate_condition(df, condition):
@@ -101,14 +111,14 @@ def evaluate_condition(df, condition):
     Supported operators:
     - Basic: <, <=, >, >=, ==, !=
     - Cross: crosses_above, crosses_below
-    - Percentage: pct_change, pct_change_above, pct_change_below
+    - Percentage: pct_change_above, pct_change_below
     
     Returns: boolean Series
     """
     indicator = condition.get("indicator", "")
     operator = condition.get("operator", ">")
     value = condition.get("value")
-    compare_to = condition.get("compare_to")  # For indicator comparison
+    compare_to = condition.get("compare_to")
     
     if indicator not in df.columns:
         return pd.Series([False] * len(df), index=df.index)
@@ -118,72 +128,35 @@ def evaluate_condition(df, condition):
     # Indicator comparison (e.g., RSI > SMA_20)
     if compare_to and compare_to in df.columns:
         compare_col = df[compare_to]
-        if operator == "<":
-            return col < compare_col
-        elif operator == "<=":
-            return col <= compare_col
-        elif operator == ">":
-            return col > compare_col
-        elif operator == ">=":
-            return col >= compare_col
-        elif operator == "==":
-            return col == compare_col
-        elif operator == "!=":
-            return col != compare_col
+        if operator in _BASIC_OPERATORS:
+            return _BASIC_OPERATORS[operator](col, compare_col)
         elif operator == "crosses_above":
             return (col > compare_col) & (col.shift(1) <= compare_col.shift(1))
         elif operator == "crosses_below":
             return (col < compare_col) & (col.shift(1) >= compare_col.shift(1))
-        else:
-            return pd.Series([False] * len(df), index=df.index)
+        return pd.Series([False] * len(df), index=df.index)
     
     # Cross operators (crosses above/below a value)
     if operator == "crosses_above":
-        if value is None:
-            return pd.Series([False] * len(df), index=df.index)
-        return (col > value) & (col.shift(1) <= value)
+        return (col > value) & (col.shift(1) <= value) if value is not None else pd.Series([False] * len(df), index=df.index)
     elif operator == "crosses_below":
-        if value is None:
-            return pd.Series([False] * len(df), index=df.index)
-        return (col < value) & (col.shift(1) >= value)
+        return (col < value) & (col.shift(1) >= value) if value is not None else pd.Series([False] * len(df), index=df.index)
     
     # Percentage change operators
-    if operator == "pct_change":
+    if operator in ("pct_change", "pct_change_above"):
         if value is None:
             return pd.Series([False] * len(df), index=df.index)
-        pct_change = col.pct_change() * 100
-        return pct_change > value
-    elif operator == "pct_change_above":
-        if value is None:
-            return pd.Series([False] * len(df), index=df.index)
-        pct_change = col.pct_change() * 100
-        return pct_change > value
+        return (col.pct_change() * 100) > value
     elif operator == "pct_change_below":
         if value is None:
             return pd.Series([False] * len(df), index=df.index)
-        pct_change = col.pct_change() * 100
-        return pct_change < value
+        return (col.pct_change() * 100) < value
     
     # Basic comparison operators
-    if value is None:
+    if value is None or operator not in _BASIC_OPERATORS:
         return pd.Series([False] * len(df), index=df.index)
     
-    value = float(value)
-    
-    if operator == "<":
-        return col < value
-    elif operator == "<=":
-        return col <= value
-    elif operator == ">":
-        return col > value
-    elif operator == ">=":
-        return col >= value
-    elif operator == "==":
-        return col == value
-    elif operator == "!=":
-        return col != value
-    else:
-        return pd.Series([False] * len(df), index=df.index)
+    return _BASIC_OPERATORS[operator](col, float(value))
 
 
 def combine_conditions(df, conditions, logic="AND"):
@@ -199,15 +172,9 @@ def combine_conditions(df, conditions, logic="AND"):
     results = [evaluate_condition(df, cond) for cond in conditions]
     
     if logic == "AND":
-        combined = results[0]
-        for r in results[1:]:
-            combined = combined & r
-        return combined
+        return pd.concat(results, axis=1).all(axis=1)
     else:  # OR
-        combined = results[0]
-        for r in results[1:]:
-            combined = combined | r
-        return combined
+        return pd.concat(results, axis=1).any(axis=1)
 
 
 def execute_custom_strategy(df, buy_conditions, sell_conditions, buy_logic="AND", sell_logic="AND"):
